@@ -1,0 +1,73 @@
+{
+  "name": "metal-bracket-electron",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac"
+  },
+  "dependencies": {
+    "vue": "^3.5.30"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^24.12.0",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/tsconfig": "^0.9.0",
+    "electron": "^41.1.0",
+    "electron-builder": "^26.8.1",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.2.2",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.1",
+    "vite-plugin-electron": "^0.29.1",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vue-tsc": "^3.2.5"
+  },
+  "build": {
+    "appId": "dev.otosky.metal-bracket",
+    "productName": "Metal Bracket",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "mac": {
+      "icon": "public/icon.png",
+      "category": "public.app-category.entertainment",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "icon": "public/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
