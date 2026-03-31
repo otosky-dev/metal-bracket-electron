@@ -1,6 +1,8 @@
 {
   "name": "metal-bracket-electron",
   "version": "1.0.0",
+  "description": "A music bracket app",
+  "author": "Otosky",
   "private": true,
   "type": "module",
   "main": "dist-electron/main.js",
