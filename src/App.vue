@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useTournament } from './composables/useTournament'
 import type { Album, Match as MatchType } from './types'
 import Match from './components/Match.vue'
@@ -27,6 +27,12 @@ function backToCurrentMatch() {
 }
 
 const showFortyNineThree = ref(false)
+
+const fortyNineThreeCount = computed(() =>
+  tournament.value.rounds.reduce((sum, round) =>
+    sum + round.matches.filter(m => m.replacement).length, 0
+  )
+)
 
 function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean) {
   applyFortyNineThree(slot, replacement, fromEliminated)
@@ -93,6 +99,11 @@ function handleForceWin(winner: Album, fromEliminated: boolean) {
           <div class="flex justify-center">
             <AlbumCard :album="champion" :highlighted="true" />
           </div>
+          <p v-if="fortyNineThreeCount > 0" class="mt-6 text-blood text-lg italic inline-flex items-center justify-center gap-2 w-full">
+            <b>{{ fortyNineThreeCount }}</b>
+            <img src="/logo_tdd_dark.png" alt="49.3" class="h-5 w-5 object-contain mix-blend-screen" />
+            49.3 ont été lâchement appliqués lors de ce tournoi !
+          </p>
         </div>
 
         <!-- Full bracket recap -->
@@ -137,12 +148,16 @@ function handleForceWin(winner: Album, fromEliminated: boolean) {
               <p class="text-blood font-bold inline-flex items-center gap-1.5">
                 <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 — Victoire forcée
               </p>
-              <p class="text-dust text-base mt-1">
-                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.evicted?.[0]?.artist }} — {{ viewingMatch.replacement.evicted?.[0]?.name }}</span>
-                et
-                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.evicted?.[1]?.artist }} — {{ viewingMatch.replacement.evicted?.[1]?.name }}</span>
-                ont été évincés
-              </p>
+              <div v-if="viewingMatch.replacement.evicted" class="flex justify-center items-center gap-4 mt-3">
+                <div v-for="(album, i) in viewingMatch.replacement.evicted" :key="i" class="flex items-center gap-2 opacity-60">
+                  <img :src="album.cover" class="w-12 h-12 rounded object-cover grayscale" />
+                  <div class="text-left">
+                    <p class="text-parchment text-sm font-semibold">{{ album.name }}</p>
+                    <p class="text-dust text-xs">{{ album.artist }}</p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-dust text-sm mt-2 italic">ont été évincés</p>
             </div>
           </template>
 

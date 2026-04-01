@@ -82,6 +82,11 @@ function replaceTooltip(match: Match) {
           >
             <template v-if="isForceWin(match)">
               <BracketEntry :album="match.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(match)" />
+              <div v-if="match.replacement?.evicted" class="flex items-center gap-2 px-3 py-1.5 opacity-50">
+                <img :src="match.replacement.evicted[0].cover" class="w-8 h-8 rounded object-cover grayscale" :title="match.replacement.evicted[0].artist + ' — ' + match.replacement.evicted[0].name" />
+                <img :src="match.replacement.evicted[1].cover" class="w-8 h-8 rounded object-cover grayscale" :title="match.replacement.evicted[1].artist + ' — ' + match.replacement.evicted[1].name" />
+                <span class="text-xs text-dust italic">évincés</span>
+              </div>
             </template>
             <template v-else>
               <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="is493Slot(match, 'album1')" :tooltip-text="replaceTooltip(match)" />
@@ -108,6 +113,11 @@ function replaceTooltip(match: Match) {
         >
           <template v-if="isForceWin(finale)">
             <BracketEntry :album="finale.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(finale)" />
+            <div v-if="finale.replacement?.evicted" class="flex items-center gap-2 opacity-50">
+              <img :src="finale.replacement.evicted[0].cover" class="w-8 h-8 rounded object-cover grayscale" :title="finale.replacement.evicted[0].artist + ' — ' + finale.replacement.evicted[0].name" />
+              <img :src="finale.replacement.evicted[1].cover" class="w-8 h-8 rounded object-cover grayscale" :title="finale.replacement.evicted[1].artist + ' — ' + finale.replacement.evicted[1].name" />
+              <span class="text-xs text-dust italic">évincés</span>
+            </div>
           </template>
           <template v-else>
             <BracketEntry :album="finale.album1" :is-winner="finale.winner?.id === finale.album1?.id" :is493="is493Slot(finale, 'album1')" :tooltip-text="replaceTooltip(finale)" />
@@ -143,6 +153,11 @@ function replaceTooltip(match: Match) {
           >
             <template v-if="isForceWin(match)">
               <BracketEntry :album="match.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(match)" />
+              <div v-if="match.replacement?.evicted" class="flex items-center gap-2 px-3 py-1.5 opacity-50">
+                <img :src="match.replacement.evicted[0].cover" class="w-8 h-8 rounded object-cover grayscale" :title="match.replacement.evicted[0].artist + ' — ' + match.replacement.evicted[0].name" />
+                <img :src="match.replacement.evicted[1].cover" class="w-8 h-8 rounded object-cover grayscale" :title="match.replacement.evicted[1].artist + ' — ' + match.replacement.evicted[1].name" />
+                <span class="text-xs text-dust italic">évincés</span>
+              </div>
             </template>
             <template v-else>
               <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="is493Slot(match, 'album1')" :tooltip-text="replaceTooltip(match)" />
