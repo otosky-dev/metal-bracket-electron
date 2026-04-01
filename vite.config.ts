@@ -14,8 +14,8 @@ export default defineConfig(async () => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
-          name: 'Metal Album of the Year',
-          short_name: 'Metal Bracket',
+          name: 'Doomocracy',
+          short_name: 'Doomocracy',
           description: 'Tournoi de brackets pour élire le meilleur album metal de l\'année',
           theme_color: '#1a1a1a',
           background_color: '#0a0a0a',

@@ -37,11 +37,30 @@ function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fro
 <template>
   <div class="min-h-screen text-parchment">
     <!-- Header -->
-    <header class="text-center py-8 border-b border-doom-700">
-      <h1 class="text-7xl font-doom tracking-wide text-ochre">
-        Metal Album of the Year
-        <span v-if="started" class="text-parchment">{{ tournament.year }}</span>
-      </h1>
+    <header class="border-b border-doom-700 overflow-hidden">
+      <div class="flex items-center justify-center gap-6 max-w-6xl mx-auto">
+        <!-- Left illustration -->
+        <img
+          src="/left-cropped.png"
+          alt=""
+          class="h-40 w-auto object-contain opacity-80 mix-blend-screen hidden md:block"
+        />
+        <!-- Logo -->
+        <div class="flex flex-col items-center py-4">
+          <img
+            src="/logo-cropped-clean.png"
+            alt="Doomocracy"
+            class="h-32 md:h-36 w-auto object-contain mix-blend-screen"
+          />
+          <span v-if="started" class="text-parchment text-2xl font-doom mt-1">{{ tournament.year }}</span>
+        </div>
+        <!-- Right illustration -->
+        <img
+          src="/right-cropped.png"
+          alt=""
+          class="h-40 w-auto object-contain opacity-80 mix-blend-screen hidden md:block"
+        />
+      </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8">
