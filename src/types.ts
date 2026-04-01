@@ -6,7 +6,7 @@ export type Album = {
 }
 
 export type Replacement = {
-  type: 'replace' | 'forceWin'
+  type: 'replace' | 'forceWin' | 'directWin'
   slot: 'album1' | 'album2'
   replaced: Album
   replacement: Album

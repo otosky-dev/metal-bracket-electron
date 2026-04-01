@@ -8,7 +8,7 @@ import AlbumCard from './components/AlbumCard.vue'
 import SetupParticipants from './components/SetupParticipants.vue'
 import FortyNineThreeModal from './components/FortyNineThreeModal.vue'
 
-const { tournament, started, currentRound, currentMatch, champion, pickWinner, applyFortyNineThree, forceWinner, start, reset } = useTournament()
+const { tournament, started, currentRound, currentMatch, champion, pickWinner, pickWinnerBy493, applyFortyNineThree, forceWinner, start, reset } = useTournament()
 
 const yearInput = ref(2009)
 
@@ -169,8 +169,14 @@ function handleForceWin(winner: Album, fromEliminated: boolean) {
                 :active="false"
               />
             </div>
+            <!-- 49.3 info -->
+            <div v-if="viewingMatch.replacement?.type === 'directWin'" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
+              <p class="text-blood font-bold inline-flex items-center gap-1.5">
+                <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> Victoire par 49.3
+              </p>
+            </div>
             <!-- 49.3 replacement info -->
-            <div v-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
+            <div v-else-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
               <p class="text-blood font-bold inline-flex items-center gap-1.5">
                 <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 appliqué sur ce match
               </p>
@@ -208,6 +214,7 @@ function handleForceWin(winner: Album, fromEliminated: boolean) {
               :match="currentMatch"
               :active="true"
               @pick="pickWinner"
+              @pick493="pickWinnerBy493"
             />
           </div>
           <!-- 49.3 button -->

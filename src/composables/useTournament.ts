@@ -155,6 +155,26 @@ export function useTournament() {
     saveToStorage(t)
   }
 
+  function pickWinnerBy493(album: Album) {
+    const t = tournament.value
+    const match = currentMatch.value
+    if (!match || t.finished) return
+
+    const loser = match.album1?.id === album.id ? match.album2 : match.album1
+    const winnerSlot: 'album1' | 'album2' = match.album1?.id === album.id ? 'album1' : 'album2'
+
+    // Mark as 49.3 direct win
+    match.replacement = {
+      type: 'directWin',
+      slot: winnerSlot,
+      replaced: loser!,
+      replacement: album,
+    }
+
+    // Normal win logic
+    pickWinner(album)
+  }
+
   function applyFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean) {
     const t = tournament.value
     const match = currentMatch.value
@@ -258,6 +278,7 @@ export function useTournament() {
     currentMatch,
     champion,
     pickWinner,
+    pickWinnerBy493,
     applyFortyNineThree,
     forceWinner,
     start,
