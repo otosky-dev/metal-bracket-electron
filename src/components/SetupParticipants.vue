@@ -21,11 +21,9 @@ const entries = ref<Entry[]>(emptyEntries(participantCount.value))
 
 watch(participantCount, (newCount, oldCount) => {
   if (newCount > oldCount) {
-    // Growing: append empty entries
     const extra = emptyEntries(newCount - oldCount)
     entries.value = [...entries.value, ...extra]
   } else {
-    // Shrinking: keep only the first newCount entries
     entries.value = entries.value.slice(0, newCount)
   }
 })
@@ -54,52 +52,121 @@ function confirm() {
   emit('confirm', buildAlbums())
 }
 
-// --- Cover upload ---
+// --- Image resize helper (returns a Promise) ---
+function resizeFile(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxSize = 300
+        let { width, height } = img
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = (height / width) * maxSize
+            width = maxSize
+          } else {
+            width = (width / height) * maxSize
+            height = maxSize
+          }
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
+      }
+      img.src = e.target!.result as string
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+// --- Single cover upload ---
 const fileInputs = ref<(HTMLInputElement | null)[]>([])
 
 function triggerUpload(index: number) {
+  if (!isValid.value) return
   fileInputs.value[index]?.click()
 }
 
-function handleFileUpload(index: number, event: Event) {
+async function handleFileUpload(index: number, event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  resizeAndStore(file, index)
-}
-
-function resizeAndStore(file: File, index: number) {
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      const maxSize = 300
-      let { width, height } = img
-      if (width > maxSize || height > maxSize) {
-        if (width > height) {
-          height = (height / width) * maxSize
-          width = maxSize
-        } else {
-          width = (width / height) * maxSize
-          height = maxSize
-        }
-      }
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')!
-      ctx.drawImage(img, 0, 0, width, height)
-      entries.value[index].cover = canvas.toDataURL('image/jpeg', 0.8)
-    }
-    img.src = e.target!.result as string
-  }
-  reader.readAsDataURL(file)
+  if (!file || !isValid.value) return
+  entries.value[index].cover = await resizeFile(file)
 }
 
 function removeCover(index: number) {
   entries.value[index].cover = ''
 }
 
-// --- Bulk import ---
+// --- Bulk cover upload ---
+const bulkFileInput = ref<HTMLInputElement | null>(null)
+
+function triggerBulkUpload() {
+  if (!isValid.value) return
+  bulkFileInput.value?.click()
+}
+
+async function handleBulkUpload(event: Event) {
+  const files = (event.target as HTMLInputElement).files
+  if (!files || !isValid.value) return
+
+  const sorted = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+
+  for (let i = 0; i < sorted.length && i < participantCount.value; i++) {
+    entries.value[i].cover = await resizeFile(sorted[i])
+  }
+
+  // Reset input so re-selecting the same files triggers change
+  if (bulkFileInput.value) bulkFileInput.value.value = ''
+}
+
+// --- Drag & drop covers ---
+const dragSourceIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+function onDragStart(index: number, event: DragEvent) {
+  if (!entries.value[index].cover) return
+  dragSourceIndex.value = index
+  event.dataTransfer!.effectAllowed = 'move'
+}
+
+function onDragOver(index: number, event: DragEvent) {
+  if (dragSourceIndex.value === null) return
+  event.preventDefault()
+  event.dataTransfer!.dropEffect = 'move'
+  dragOverIndex.value = index
+}
+
+function onDragLeave() {
+  dragOverIndex.value = null
+}
+
+function onDrop(targetIndex: number) {
+  const srcIndex = dragSourceIndex.value
+  if (srcIndex === null || srcIndex === targetIndex) {
+    dragSourceIndex.value = null
+    dragOverIndex.value = null
+    return
+  }
+
+  // Swap covers
+  const temp = entries.value[srcIndex].cover
+  entries.value[srcIndex].cover = entries.value[targetIndex].cover
+  entries.value[targetIndex].cover = temp
+
+  dragSourceIndex.value = null
+  dragOverIndex.value = null
+}
+
+function onDragEnd() {
+  dragSourceIndex.value = null
+  dragOverIndex.value = null
+}
+
+// --- Bulk text import ---
 const showImport = ref(false)
 const importText = ref('')
 
@@ -116,22 +183,18 @@ function parseImport() {
     let name = ''
 
     if (line.includes('\t')) {
-      // Tab-separated: Artist\tAlbum
       const parts = line.split('\t')
       artist = parts[0]?.trim() ?? ''
       name = parts[1]?.trim() ?? ''
     } else if (line.includes(' - ')) {
-      // Dash-separated: Artist - Album
       const idx = line.indexOf(' - ')
       artist = line.slice(0, idx).trim()
       name = line.slice(idx + 3).trim()
     } else if (line.includes(';')) {
-      // Semicolon-separated: Artist;Album
       const parts = line.split(';')
       artist = parts[0]?.trim() ?? ''
       name = parts[1]?.trim() ?? ''
     } else {
-      // Fallback: treat entire line as album name
       name = line
     }
 
@@ -178,6 +241,29 @@ function clearAll() {
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Coller une liste
+        </button>
+        <!-- Bulk cover upload -->
+        <input
+          ref="bulkFileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          @change="handleBulkUpload"
+        />
+        <button
+          @click="triggerBulkUpload"
+          :disabled="!isValid"
+          class="px-4 py-2 text-base border rounded-lg transition flex items-center gap-2"
+          :class="isValid
+            ? 'bg-doom-800 hover:bg-doom-700 text-parchment border-doom-600'
+            : 'bg-doom-900 text-doom-600 border-doom-800 cursor-not-allowed'"
+          :title="isValid ? 'Importer toutes les pochettes d\'un coup' : 'Remplissez tous les participants d\'abord'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Importer les pochettes
         </button>
         <button
           @click="clearAll"
@@ -228,8 +314,14 @@ function clearAll() {
             class="w-full px-2 py-1.5 bg-transparent border border-doom-700/50 rounded text-base text-parchment placeholder-doom-600 focus:outline-none focus:border-ochre/50 transition"
           />
 
-          <!-- Cover -->
-          <div class="flex justify-center">
+          <!-- Cover (drag & drop enabled, blocked until all text filled) -->
+          <div
+            class="flex justify-center"
+            @dragover="isValid ? onDragOver(i, $event) : undefined"
+            @dragleave="onDragLeave"
+            @drop="isValid ? onDrop(i) : undefined"
+            :class="dragOverIndex === i ? 'ring-2 ring-ochre/60 rounded' : ''"
+          >
             <input
               :ref="(el) => { fileInputs[i] = el as HTMLInputElement }"
               type="file"
@@ -240,19 +332,30 @@ function clearAll() {
             <button
               v-if="!entry.cover"
               @click="triggerUpload(i)"
-              class="w-10 h-10 rounded border border-dashed border-doom-600 hover:border-ochre/50 flex items-center justify-center text-doom-600 hover:text-ochre transition"
-              title="Ajouter une pochette"
+              :disabled="!isValid"
+              class="w-10 h-10 rounded border border-dashed flex items-center justify-center transition"
+              :class="isValid
+                ? 'border-doom-600 hover:border-ochre/50 text-doom-600 hover:text-ochre cursor-pointer'
+                : 'border-doom-800 text-doom-800 cursor-not-allowed'"
+              :title="isValid ? 'Ajouter une pochette' : 'Remplissez tous les participants d\'abord'"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
-            <div v-else class="relative group">
+            <div
+              v-else
+              class="relative group"
+              draggable="true"
+              @dragstart="onDragStart(i, $event)"
+              @dragend="onDragEnd"
+            >
               <img
                 :src="entry.cover"
-                class="w-10 h-10 rounded object-cover cursor-pointer"
+                class="w-10 h-10 rounded object-cover cursor-grab active:cursor-grabbing"
+                :class="dragSourceIndex === i ? 'opacity-40' : ''"
                 @click="triggerUpload(i)"
-                title="Changer la pochette"
+                title="Glisser pour réordonner · Cliquer pour changer"
               />
               <button
                 @click.stop="removeCover(i)"
