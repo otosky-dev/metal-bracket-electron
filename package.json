@@ -8,8 +8,11 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
+    "dev:web": "cross-env BUILD_TARGET=web vite",
     "build": "vue-tsc --noEmit && vite build",
+    "build:web": "cross-env BUILD_TARGET=web vue-tsc --noEmit && cross-env BUILD_TARGET=web vite build",
     "preview": "vite preview",
+    "preview:web": "cross-env BUILD_TARGET=web vite preview",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
@@ -23,6 +26,7 @@
     "@types/node": "^24.12.0",
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/tsconfig": "^0.9.0",
+    "cross-env": "^10.1.0",
     "electron": "^41.1.0",
     "electron-builder": "^26.8.1",
     "png-to-ico": "^3.0.1",
@@ -32,6 +36,7 @@
     "vite": "^8.0.1",
     "vite-plugin-electron": "^0.29.1",
     "vite-plugin-electron-renderer": "^0.14.6",
+    "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^3.2.5"
   },
   "build": {
