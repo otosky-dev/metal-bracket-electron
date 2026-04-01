@@ -8,7 +8,7 @@ import AlbumCard from './components/AlbumCard.vue'
 import SetupParticipants from './components/SetupParticipants.vue'
 import FortyNineThreeModal from './components/FortyNineThreeModal.vue'
 
-const { tournament, started, currentRound, currentMatch, champion, pickWinner, applyFortyNineThree, start, reset } = useTournament()
+const { tournament, started, currentRound, currentMatch, champion, pickWinner, applyFortyNineThree, forceWinner, start, reset } = useTournament()
 
 const yearInput = ref(new Date().getFullYear())
 
@@ -30,6 +30,11 @@ const showFortyNineThree = ref(false)
 
 function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean) {
   applyFortyNineThree(slot, replacement, fromEliminated)
+  showFortyNineThree.value = false
+}
+
+function handleForceWin(winner: Album, fromEliminated: boolean) {
+  forceWinner(winner, fromEliminated)
   showFortyNineThree.value = false
 }
 </script>
@@ -122,7 +127,7 @@ function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fro
           <!-- 49.3 replacement info -->
           <div v-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
             <p class="text-blood font-bold inline-flex items-center gap-1.5">
-              <span>⚡</span> 49.3 appliqué sur ce match
+              <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 appliqué sur ce match
             </p>
             <p class="text-dust text-base mt-1">
               <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replaced.artist }} — {{ viewingMatch.replacement.replaced.name }}</span>
@@ -164,8 +169,8 @@ function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fro
               @click="showFortyNineThree = true"
               class="px-5 py-2.5 text-lg text-blood hover:text-red-400 border border-doom-700 hover:border-blood/50 rounded-lg transition inline-flex items-center gap-2 cursor-pointer"
             >
-              <span class="text-xl">⚡</span>
-              49.3 — Remplacer un participant
+              <img src="/logo_tdd_dark.png" alt="49.3" class="h-6 w-6 object-contain mix-blend-screen" />
+              49.3
             </button>
           </div>
           <!-- 49.3 modal -->
@@ -175,6 +180,7 @@ function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fro
             :eliminated="tournament.eliminated"
             @close="showFortyNineThree = false"
             @apply="handleFortyNineThree"
+            @force-win="handleForceWin"
           />
         </div>
 

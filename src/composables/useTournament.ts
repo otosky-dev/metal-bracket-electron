@@ -182,6 +182,47 @@ export function useTournament() {
     saveToStorage(t)
   }
 
+  function forceWinner(winner: Album, fromEliminated: boolean) {
+    const t = tournament.value
+    const match = currentMatch.value
+    if (!match || t.finished) return
+
+    // Store replacement info — both original participants are overridden
+    match.replacement = { slot: 'album1', replaced: match.album1!, replacement: winner }
+
+    // Eliminate both current participants
+    if (match.album1 && !t.eliminated.some(a => a.id === match.album1!.id)) {
+      t.eliminated.push(match.album1)
+    }
+    if (match.album2 && !t.eliminated.some(a => a.id === match.album2!.id)) {
+      t.eliminated.push(match.album2)
+    }
+
+    // If winner came from eliminated, remove them
+    if (fromEliminated) {
+      t.eliminated = t.eliminated.filter(a => a.id !== winner.id)
+    }
+
+    // Set winner directly
+    match.winner = winner
+
+    // Propagate winner to next round
+    const nextRoundIndex = t.currentRoundIndex + 1
+    if (nextRoundIndex < t.rounds.length) {
+      const nextRound = t.rounds[nextRoundIndex]
+      const matchIndexInNextRound = Math.floor(t.currentMatchIndex / 2)
+      const nextMatch = nextRound.matches[matchIndexInNextRound]
+      if (t.currentMatchIndex % 2 === 0) {
+        nextMatch.album1 = winner
+      } else {
+        nextMatch.album2 = winner
+      }
+    }
+
+    advanceToNextMatch()
+    saveToStorage(t)
+  }
+
   function start(year: number, albums: Album[]) {
     const fresh: Tournament = {
       year,
@@ -212,6 +253,7 @@ export function useTournament() {
     champion,
     pickWinner,
     applyFortyNineThree,
+    forceWinner,
     start,
     reset,
   }

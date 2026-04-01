@@ -12,12 +12,17 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   apply: [slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean]
+  forceWin: [winner: Album, fromEliminated: boolean]
 }>()
 
-// Step 1: pick which album to replace
+// Step 0: choose action mode
+type Mode = 'replace' | 'forceWin'
+const mode = ref<Mode | null>(null)
+
+// Replace flow — Step 1: pick which album to replace
 const selectedSlot = ref<'album1' | 'album2' | null>(null)
 
-// Step 2: pick source (eliminated or new)
+// Shared — pick source (eliminated or new)
 type Source = 'eliminated' | 'new'
 const source = ref<Source | null>(null)
 
@@ -31,41 +36,55 @@ const newCover = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const canConfirm = computed(() => {
-  if (!selectedSlot.value) return false
+  if (mode.value === 'replace') {
+    if (!selectedSlot.value) return false
+  }
   if (source.value === 'eliminated') return selectedEliminated.value !== null
   if (source.value === 'new') return newArtist.value.trim() !== '' && newName.value.trim() !== ''
   return false
 })
 
-function confirm() {
-  if (!canConfirm.value || !selectedSlot.value) return
-
-  let replacement: Album
-  let fromEliminated = false
-
+function buildAlbum(): { album: Album; fromEliminated: boolean } | null {
   if (source.value === 'eliminated' && selectedEliminated.value) {
-    replacement = selectedEliminated.value
-    fromEliminated = true
-  } else if (source.value === 'new') {
-    replacement = {
-      id: `493-${Date.now()}`,
-      artist: newArtist.value.trim(),
-      name: newName.value.trim(),
-      cover: newCover.value || PLACEHOLDER_COVER,
-    }
-  } else {
-    return
+    return { album: selectedEliminated.value, fromEliminated: true }
   }
+  if (source.value === 'new') {
+    return {
+      album: {
+        id: `493-${Date.now()}`,
+        artist: newArtist.value.trim(),
+        name: newName.value.trim(),
+        cover: newCover.value || PLACEHOLDER_COVER,
+      },
+      fromEliminated: false,
+    }
+  }
+  return null
+}
 
-  emit('apply', selectedSlot.value, replacement, fromEliminated)
+function confirm() {
+  if (!canConfirm.value) return
+  const result = buildAlbum()
+  if (!result) return
+
+  if (mode.value === 'replace' && selectedSlot.value) {
+    emit('apply', selectedSlot.value, result.album, result.fromEliminated)
+  } else if (mode.value === 'forceWin') {
+    emit('forceWin', result.album, result.fromEliminated)
+  }
 }
 
 function goBack() {
   if (source.value) {
     source.value = null
     selectedEliminated.value = null
-  } else if (selectedSlot.value) {
+    newArtist.value = ''
+    newName.value = ''
+    newCover.value = ''
+  } else if (mode.value === 'replace' && selectedSlot.value) {
     selectedSlot.value = null
+  } else if (mode.value) {
+    mode.value = null
   } else {
     emit('close')
   }
@@ -106,10 +125,17 @@ function handleFileUpload(event: Event) {
 }
 
 const stepTitle = computed(() => {
-  if (!selectedSlot.value) return 'Quel participant remplacer ?'
-  if (!source.value) return 'Comment le remplacer ?'
-  if (source.value === 'eliminated') return 'Repêcher un éliminé'
-  return 'Nouveau participant'
+  if (!mode.value) return 'Que souhaitez-vous faire ?'
+  if (mode.value === 'replace') {
+    if (!selectedSlot.value) return 'Quel participant remplacer ?'
+    if (!source.value) return 'Comment le remplacer ?'
+    if (source.value === 'eliminated') return 'Repêcher un éliminé'
+    return 'Nouveau participant'
+  }
+  // forceWin
+  if (!source.value) return 'Qui faire gagner ?'
+  if (source.value === 'eliminated') return 'Repêcher un éliminé comme vainqueur'
+  return 'Nouveau participant vainqueur'
 })
 </script>
 
@@ -119,7 +145,7 @@ const stepTitle = computed(() => {
       <div class="bg-doom-900 border border-doom-700 rounded-xl p-6 w-full max-w-xl mx-4 shadow-2xl">
         <!-- Header -->
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-2xl font-doom text-blood tracking-wide">⚡ 49.3</h3>
+          <h3 class="text-2xl font-doom text-blood tracking-wide flex items-center gap-2"><img src="/logo_tdd_dark.png" alt="49.3" class="h-7 w-7 object-contain mix-blend-screen" /> 49.3</h3>
           <button
             @click="$emit('close')"
             class="text-dust hover:text-parchment transition text-2xl leading-none"
@@ -128,8 +154,32 @@ const stepTitle = computed(() => {
 
         <p class="text-lg font-doom text-ochre mb-4">{{ stepTitle }}</p>
 
-        <!-- Step 1: Pick which album to replace -->
-        <div v-if="!selectedSlot" class="flex flex-col gap-3">
+        <!-- Step 0: Choose action mode -->
+        <div v-if="!mode" class="flex flex-col gap-3">
+          <button
+            @click="mode = 'replace'"
+            class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
+          >
+            <span class="text-3xl">🔄</span>
+            <div class="text-left">
+              <p class="text-parchment font-bold text-lg">Remplacer un participant</p>
+              <p class="text-dust text-sm">Remplacer un des deux participants du match en cours</p>
+            </div>
+          </button>
+          <button
+            @click="mode = 'forceWin'"
+            class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
+          >
+            <span class="text-3xl">🏆</span>
+            <div class="text-left">
+              <p class="text-parchment font-bold text-lg">Faire gagner directement</p>
+              <p class="text-dust text-sm">Forcer la victoire d'un éliminé ou d'un nouveau participant</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Replace flow — Step 1: Pick which album to replace -->
+        <div v-else-if="mode === 'replace' && !selectedSlot" class="flex flex-col gap-3">
           <button
             v-if="match.album1"
             @click="selectedSlot = 'album1'"
@@ -154,7 +204,7 @@ const stepTitle = computed(() => {
           </button>
         </div>
 
-        <!-- Step 2: Pick source -->
+        <!-- Source picker (shared by both modes) -->
         <div v-else-if="!source" class="flex flex-col gap-3">
           <button
             v-if="eliminated.length > 0"
