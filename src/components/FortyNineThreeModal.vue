@@ -125,7 +125,7 @@ function handleFileUpload(event: Event) {
 }
 
 const stepTitle = computed(() => {
-  if (!mode.value) return 'Que souhaitez-vous faire ?'
+  if (!mode.value) return ''
   if (mode.value === 'replace') {
     if (!selectedSlot.value) return 'Quel participant remplacer ?'
     if (!source.value) return 'Comment le remplacer ?'
@@ -145,14 +145,14 @@ const stepTitle = computed(() => {
       <div class="bg-doom-900 border border-doom-700 rounded-xl p-6 w-full max-w-xl mx-4 shadow-2xl">
         <!-- Header -->
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-2xl font-doom text-blood tracking-wide flex items-center gap-2"><img src="/logo_tdd_dark.png" alt="49.3" class="h-7 w-7 object-contain mix-blend-screen" /> 49.3</h3>
+          <h3 class="text-2xl font-doom text-blood tracking-wide flex items-center gap-2"><img src="/logo_tdd_dark.png" alt="49.3" class="h-7 w-7 object-contain mix-blend-screen" /> 49.3 <span v-if="!mode" class="text-lg text-dust font-normal italic">Mais que va-t'il faire ?</span></h3>
           <button
             @click="$emit('close')"
             class="text-dust hover:text-parchment transition text-2xl leading-none"
           >&times;</button>
         </div>
 
-        <p class="text-lg font-doom text-ochre mb-4">{{ stepTitle }}</p>
+        <p v-if="stepTitle" class="text-lg font-doom text-ochre mb-4">{{ stepTitle }}</p>
 
         <!-- Step 0: Choose action mode -->
         <div v-if="!mode" class="flex flex-col gap-3">
@@ -160,7 +160,7 @@ const stepTitle = computed(() => {
             @click="mode = 'replace'"
             class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
           >
-            <span class="text-3xl">🔄</span>
+            <img src="/ozzy.jpg" alt="Ozzy" class="w-10 h-10 rounded-full object-cover shrink-0" />
             <div class="text-left">
               <p class="text-parchment font-bold text-lg">Remplacer un participant</p>
               <p class="text-dust text-sm">Remplacer un des deux participants du match en cours</p>
@@ -170,7 +170,7 @@ const stepTitle = computed(() => {
             @click="mode = 'forceWin'"
             class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
           >
-            <span class="text-3xl">🏆</span>
+            <img src="/lemmy.jpg" alt="Lemmy" class="w-10 h-10 rounded-full object-cover shrink-0" />
             <div class="text-left">
               <p class="text-parchment font-bold text-lg">Faire gagner directement</p>
               <p class="text-dust text-sm">Forcer la victoire d'un éliminé ou d'un nouveau participant</p>
@@ -211,7 +211,7 @@ const stepTitle = computed(() => {
             @click="source = 'eliminated'"
             class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
           >
-            <span class="text-3xl">🔄</span>
+            <img src="/dio.png" alt="Dio" class="w-10 h-10 rounded-full object-cover shrink-0" />
             <div class="text-left">
               <p class="text-parchment font-bold text-lg">Repêcher un éliminé</p>
               <p class="text-dust text-sm">{{ eliminated.length }} éliminé{{ eliminated.length > 1 ? 's' : '' }} disponible{{ eliminated.length > 1 ? 's' : '' }}</p>
@@ -221,7 +221,7 @@ const stepTitle = computed(() => {
             @click="source = 'new'"
             class="flex items-center gap-3 p-4 rounded-lg border border-doom-700 hover:border-ochre/60 hover:bg-doom-800/60 transition"
           >
-            <span class="text-3xl">✨</span>
+            <img src="/bonscott.png" alt="Bon Scott" class="w-10 h-10 rounded-full object-cover shrink-0" />
             <div class="text-left">
               <p class="text-parchment font-bold text-lg">Nouveau participant</p>
               <p class="text-dust text-sm">Ajouter un album qui n'était pas dans le tournoi</p>
