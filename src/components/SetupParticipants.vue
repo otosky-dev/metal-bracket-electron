@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { Album } from '../types'
 
-const TOTAL = 32
+const PARTICIPANT_OPTIONS = [16, 32] as const
 const PLACEHOLDER_COVER = '/covers/placeholder.svg'
 
 type Entry = {
@@ -11,17 +11,30 @@ type Entry = {
   cover: string
 }
 
-function emptyEntries(): Entry[] {
-  return Array.from({ length: TOTAL }, () => ({ artist: '', name: '', cover: '' }))
+const participantCount = ref<number>(32)
+
+function emptyEntries(count: number): Entry[] {
+  return Array.from({ length: count }, () => ({ artist: '', name: '', cover: '' }))
 }
 
-const entries = ref<Entry[]>(emptyEntries())
+const entries = ref<Entry[]>(emptyEntries(participantCount.value))
+
+watch(participantCount, (newCount, oldCount) => {
+  if (newCount > oldCount) {
+    // Growing: append empty entries
+    const extra = emptyEntries(newCount - oldCount)
+    entries.value = [...entries.value, ...extra]
+  } else {
+    // Shrinking: keep only the first newCount entries
+    entries.value = entries.value.slice(0, newCount)
+  }
+})
 
 const filledCount = computed(() =>
   entries.value.filter(e => e.artist.trim() && e.name.trim()).length
 )
 
-const isValid = computed(() => filledCount.value === TOTAL)
+const isValid = computed(() => filledCount.value === participantCount.value)
 
 const emit = defineEmits<{
   confirm: [albums: Album[]]
@@ -97,7 +110,7 @@ function parseImport() {
     .filter(l => l.length > 0)
 
   lines.forEach((line, i) => {
-    if (i >= TOTAL) return
+    if (i >= participantCount.value) return
 
     let artist = ''
     let name = ''
@@ -131,7 +144,7 @@ function parseImport() {
 }
 
 function clearAll() {
-  entries.value = emptyEntries()
+  entries.value = emptyEntries(participantCount.value)
 }
 </script>
 
@@ -140,6 +153,23 @@ function clearAll() {
     <!-- Toolbar -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
+        <!-- Participant count selector -->
+        <div class="flex items-center gap-2">
+          <span class="text-base text-dust">Participants :</span>
+          <div class="flex rounded-lg border border-doom-700 overflow-hidden">
+            <button
+              v-for="option in PARTICIPANT_OPTIONS"
+              :key="option"
+              @click="participantCount = option"
+              class="px-3 py-2 text-base font-bold transition"
+              :class="participantCount === option
+                ? 'bg-ochre text-doom-950'
+                : 'bg-doom-800 text-dust hover:bg-doom-700 hover:text-parchment'"
+            >
+              {{ option }}
+            </button>
+          </div>
+        </div>
         <button
           @click="showImport = true"
           class="px-4 py-2 text-base bg-doom-800 hover:bg-doom-700 text-parchment border border-doom-600 rounded-lg transition flex items-center gap-2"
@@ -157,7 +187,7 @@ function clearAll() {
         </button>
       </div>
       <span class="text-base text-dust">
-        <span :class="isValid ? 'text-ochre font-bold' : ''">{{ filledCount }}</span> / {{ TOTAL }} participants
+        <span :class="isValid ? 'text-ochre font-bold' : ''">{{ filledCount }}</span> / {{ participantCount }} participants
       </span>
     </div>
 

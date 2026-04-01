@@ -6,8 +6,9 @@ import Match from './components/Match.vue'
 import Bracket from './components/Bracket.vue'
 import AlbumCard from './components/AlbumCard.vue'
 import SetupParticipants from './components/SetupParticipants.vue'
+import FortyNineThreeModal from './components/FortyNineThreeModal.vue'
 
-const { tournament, started, currentRound, currentMatch, champion, pickWinner, start, reset } = useTournament()
+const { tournament, started, currentRound, currentMatch, champion, pickWinner, applyFortyNineThree, start, reset } = useTournament()
 
 const yearInput = ref(new Date().getFullYear())
 
@@ -23,6 +24,13 @@ function viewPastMatch(match: MatchType) {
 
 function backToCurrentMatch() {
   viewingMatch.value = null
+}
+
+const showFortyNineThree = ref(false)
+
+function handleFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean) {
+  applyFortyNineThree(slot, replacement, fromEliminated)
+  showFortyNineThree.value = false
 }
 </script>
 
@@ -65,7 +73,7 @@ function backToCurrentMatch() {
 
         <!-- Full bracket recap -->
         <div class="mt-8">
-          <h2 class="text-3xl font-doom text-ochre mb-4">Tableau</h2>
+          <h2 class="text-4xl font-doom text-ochre mb-6">Tableau</h2>
           <Bracket :tournament="tournament" />
         </div>
 
@@ -84,13 +92,24 @@ function backToCurrentMatch() {
         <!-- Viewing a past match -->
         <div v-if="viewingMatch" class="mb-10">
           <div class="text-center mb-4">
-            <span class="text-base text-dust">Match terminé</span>
+            <span class="text-lg text-dust">Match terminé</span>
           </div>
           <div class="flex justify-center">
             <Match
               :match="viewingMatch"
               :active="false"
             />
+          </div>
+          <!-- 49.3 replacement info -->
+          <div v-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
+            <p class="text-blood font-bold inline-flex items-center gap-1.5">
+              <span>⚡</span> 49.3 appliqué sur ce match
+            </p>
+            <p class="text-dust text-base mt-1">
+              <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replaced.artist }} — {{ viewingMatch.replacement.replaced.name }}</span>
+              a été remplacé par
+              <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replacement.artist }} — {{ viewingMatch.replacement.replacement.name }}</span>
+            </p>
           </div>
           <div class="text-center mt-4">
             <button
@@ -105,11 +124,11 @@ function backToCurrentMatch() {
         <!-- Current match -->
         <div v-else-if="currentMatch" class="mb-10">
           <div class="text-center mb-4">
-            <span class="text-ochre font-doom text-3xl">
+            <span class="text-ochre font-doom text-4xl">
               {{ currentRound?.name }}
             </span>
-            <span class="text-doom-600 mx-2">—</span>
-            <span class="text-lg text-dust">
+            <span class="text-doom-600 mx-3">—</span>
+            <span class="text-xl text-dust">
               Match {{ tournament.currentMatchIndex + 1 }} / {{ currentRound?.matches.length }}
             </span>
           </div>
@@ -120,14 +139,33 @@ function backToCurrentMatch() {
               @pick="pickWinner"
             />
           </div>
+          <!-- 49.3 button -->
+          <div class="text-center mt-4">
+            <button
+              @click="showFortyNineThree = true"
+              class="px-5 py-2.5 text-lg text-blood hover:text-red-400 border border-doom-700 hover:border-blood/50 rounded-lg transition inline-flex items-center gap-2 cursor-pointer"
+            >
+              <span class="text-xl">⚡</span>
+              49.3 — Remplacer un participant
+            </button>
+          </div>
+          <!-- 49.3 modal -->
+          <FortyNineThreeModal
+            v-if="showFortyNineThree && currentMatch"
+            :match="currentMatch"
+            :eliminated="tournament.eliminated"
+            @close="showFortyNineThree = false"
+            @apply="handleFortyNineThree"
+          />
         </div>
 
         <!-- Bracket overview -->
         <div class="mt-8">
-          <h2 class="text-3xl font-doom text-ochre mb-4">Tableau</h2>
+          <h2 class="text-4xl font-doom text-ochre mb-6">Tableau</h2>
           <Bracket
             :tournament="tournament"
             :viewing-match-id="viewingMatch?.id"
+            :current-match-id="currentMatch?.id"
             @select-match="viewPastMatch"
           />
         </div>
@@ -136,7 +174,7 @@ function backToCurrentMatch() {
         <div class="text-center mt-8">
           <button
             @click="reset()"
-            class="px-4 py-2 text-base text-dust hover:text-blood border border-doom-700 hover:border-blood/50 rounded-lg transition"
+            class="px-4 py-2 text-base text-dust hover:text-blood border border-doom-700 hover:border-blood/50 rounded-lg transition cursor-pointer"
           >
             Recommencer
           </button>

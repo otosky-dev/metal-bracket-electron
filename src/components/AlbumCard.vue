@@ -30,17 +30,18 @@ function copyToClipboard(e: Event) {
       'ring-4 ring-ochre rounded-lg shadow-[0_0_20px_rgba(212,160,64,0.25)]': highlighted,
       'opacity-50 grayscale': !clickable && !highlighted,
     }"
+    :title="`${album.artist} — ${album.name}`"
     @click="clickable && $emit('pick', album)"
   >
     <img
       :src="album.cover"
       :alt="album.name"
-      class="w-56 h-56 object-cover rounded-lg shadow-lg"
+      class="w-64 h-64 object-cover rounded-lg shadow-lg"
     />
-    <div class="flex items-center gap-1.5 max-w-56">
+    <div class="flex items-center gap-1.5 max-w-64">
       <div class="text-center flex-1 min-w-0">
-        <p class="text-lg font-bold text-parchment leading-tight truncate">{{ album.name }}</p>
-        <p class="text-base text-dust truncate">{{ album.artist }}</p>
+        <p class="text-xl font-bold text-parchment leading-tight truncate">{{ album.name }}</p>
+        <p class="text-lg text-dust truncate">{{ album.artist }}</p>
       </div>
       <button
         @click="copyToClipboard"

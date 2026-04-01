@@ -5,11 +5,18 @@ export type Album = {
   cover: string
 }
 
+export type Replacement = {
+  slot: 'album1' | 'album2'
+  replaced: Album
+  replacement: Album
+}
+
 export type Match = {
   id: string
   album1: Album | null
   album2: Album | null
   winner: Album | null
+  replacement?: Replacement | null
 }
 
 export type Round = {

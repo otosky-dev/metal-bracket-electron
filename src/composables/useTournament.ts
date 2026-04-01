@@ -155,6 +155,33 @@ export function useTournament() {
     saveToStorage(t)
   }
 
+  function applyFortyNineThree(slot: 'album1' | 'album2', replacement: Album, fromEliminated: boolean) {
+    const t = tournament.value
+    const match = currentMatch.value
+    if (!match || t.finished) return
+
+    const replaced = match[slot]
+    if (!replaced) return
+
+    // Store replacement info on the match
+    match.replacement = { slot, replaced, replacement }
+
+    // Swap in the replacement
+    match[slot] = replacement
+
+    // The replaced album is now eliminated
+    if (!t.eliminated.some(a => a.id === replaced.id)) {
+      t.eliminated.push(replaced)
+    }
+
+    // If the replacement came from the eliminated list, remove it
+    if (fromEliminated) {
+      t.eliminated = t.eliminated.filter(a => a.id !== replacement.id)
+    }
+
+    saveToStorage(t)
+  }
+
   function start(year: number, albums: Album[]) {
     const fresh: Tournament = {
       year,
@@ -184,6 +211,7 @@ export function useTournament() {
     currentMatch,
     champion,
     pickWinner,
+    applyFortyNineThree,
     start,
     reset,
   }
