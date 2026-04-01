@@ -6,9 +6,11 @@ export type Album = {
 }
 
 export type Replacement = {
+  type: 'replace' | 'forceWin'
   slot: 'album1' | 'album2'
   replaced: Album
   replacement: Album
+  evicted?: [Album, Album]
 }
 
 export type Match = {

@@ -5,6 +5,7 @@ defineProps<{
   album: Album | null
   isWinner: boolean
   is493?: boolean
+  tooltipText?: string
 }>()
 </script>
 
@@ -22,7 +23,7 @@ defineProps<{
         <div class="truncate text-lg leading-tight">{{ album.name }}</div>
         <div class="truncate text-base leading-tight opacity-70">{{ album.artist }}</div>
       </div>
-      <img v-if="is493" src="/logo_tdd_dark.png" alt="49.3" class="shrink-0 h-4 w-4 object-contain mix-blend-screen" title="49.3 — Participant remplacé" />
+      <img v-if="is493" src="/logo_tdd_dark.png" alt="49.3" class="shrink-0 h-4 w-4 object-contain mix-blend-screen" :title="tooltipText || '49.3 — Participant remplacé'" />
     </template>
     <div v-else class="text-base text-doom-600">—</div>
   </div>

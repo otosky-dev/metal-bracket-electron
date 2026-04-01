@@ -118,23 +118,55 @@ function handleForceWin(winner: Album, fromEliminated: boolean) {
           <div class="text-center mb-4">
             <span class="text-lg text-dust">Match terminé</span>
           </div>
-          <div class="flex justify-center">
-            <Match
-              :match="viewingMatch"
-              :active="false"
-            />
-          </div>
-          <!-- 49.3 replacement info -->
-          <div v-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
-            <p class="text-blood font-bold inline-flex items-center gap-1.5">
-              <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 appliqué sur ce match
-            </p>
-            <p class="text-dust text-base mt-1">
-              <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replaced.artist }} — {{ viewingMatch.replacement.replaced.name }}</span>
-              a été remplacé par
-              <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replacement.artist }} — {{ viewingMatch.replacement.replacement.name }}</span>
-            </p>
-          </div>
+
+          <!-- ForceWin: show only the winner -->
+          <template v-if="viewingMatch.replacement?.type === 'forceWin'">
+            <div class="flex justify-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="flex items-center gap-4 px-8 py-5 bg-ochre/10 border border-ochre/30 rounded-xl">
+                  <img :src="viewingMatch.winner?.cover" class="w-16 h-16 rounded-lg object-cover" />
+                  <div>
+                    <p class="text-xl text-ochre font-bold">{{ viewingMatch.winner?.name }}</p>
+                    <p class="text-lg text-dust">{{ viewingMatch.winner?.artist }}</p>
+                  </div>
+                  <img src="/logo_tdd_dark.png" alt="49.3" class="h-6 w-6 object-contain mix-blend-screen" />
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
+              <p class="text-blood font-bold inline-flex items-center gap-1.5">
+                <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 — Victoire forcée
+              </p>
+              <p class="text-dust text-base mt-1">
+                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.evicted?.[0]?.artist }} — {{ viewingMatch.replacement.evicted?.[0]?.name }}</span>
+                et
+                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.evicted?.[1]?.artist }} — {{ viewingMatch.replacement.evicted?.[1]?.name }}</span>
+                ont été évincés
+              </p>
+            </div>
+          </template>
+
+          <!-- Normal match or replacement -->
+          <template v-else>
+            <div class="flex justify-center">
+              <Match
+                :match="viewingMatch"
+                :active="false"
+              />
+            </div>
+            <!-- 49.3 replacement info -->
+            <div v-if="viewingMatch.replacement" class="text-center mt-4 px-4 py-3 bg-blood/10 border border-blood/30 rounded-lg max-w-xl mx-auto">
+              <p class="text-blood font-bold inline-flex items-center gap-1.5">
+                <img src="/logo_tdd_dark.png" alt="49.3" class="inline h-5 w-5 object-contain mix-blend-screen" /> 49.3 appliqué sur ce match
+              </p>
+              <p class="text-dust text-base mt-1">
+                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replaced.artist }} — {{ viewingMatch.replacement.replaced.name }}</span>
+                a été remplacé par
+                <span class="text-parchment font-semibold">{{ viewingMatch.replacement.replacement.artist }} — {{ viewingMatch.replacement.replacement.name }}</span>
+              </p>
+            </div>
+          </template>
+
           <div class="text-center mt-4">
             <button
               @click="backToCurrentMatch()"

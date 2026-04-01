@@ -164,7 +164,7 @@ export function useTournament() {
     if (!replaced) return
 
     // Store replacement info on the match
-    match.replacement = { slot, replaced, replacement }
+    match.replacement = { type: 'replace', slot, replaced, replacement }
 
     // Swap in the replacement
     match[slot] = replacement
@@ -188,7 +188,13 @@ export function useTournament() {
     if (!match || t.finished) return
 
     // Store replacement info — both original participants are overridden
-    match.replacement = { slot: 'album1', replaced: match.album1!, replacement: winner }
+    match.replacement = {
+      type: 'forceWin',
+      slot: 'album1',
+      replaced: match.album1!,
+      replacement: winner,
+      evicted: [match.album1!, match.album2!],
+    }
 
     // Eliminate both current participants
     if (match.album1 && !t.eliminated.some(a => a.id === match.album1!.id)) {

@@ -31,6 +31,27 @@ const finale = computed(() => {
   const lastRound = props.tournament.rounds[props.tournament.rounds.length - 1]
   return lastRound?.matches[0] ?? null
 })
+
+function isForceWin(match: Match) {
+  return match.replacement?.type === 'forceWin'
+}
+
+function is493Slot(match: Match, slot: 'album1' | 'album2') {
+  if (!match.replacement) return false
+  if (isForceWin(match)) return false
+  return match.replacement.slot === slot
+}
+
+function forceWinTooltip(match: Match) {
+  const evicted = match.replacement?.evicted
+  if (!evicted) return '49.3 — Victoire forcée'
+  return `49.3 — Victoire forcée\nÉvincés : ${evicted[0].artist} — ${evicted[0].name} / ${evicted[1].artist} — ${evicted[1].name}`
+}
+
+function replaceTooltip(match: Match) {
+  if (!match.replacement) return ''
+  return `49.3 — ${match.replacement.replaced.artist} — ${match.replacement.replaced.name} remplacé`
+}
 </script>
 
 <template>
@@ -59,8 +80,13 @@ const finale = computed(() => {
             ]"
             @click="match.winner && $emit('selectMatch', match)"
           >
-            <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="match.replacement?.slot === 'album1'" />
-            <BracketEntry :album="match.album2" :is-winner="match.winner?.id === match.album2?.id" :is493="match.replacement?.slot === 'album2'" />
+            <template v-if="isForceWin(match)">
+              <BracketEntry :album="match.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(match)" />
+            </template>
+            <template v-else>
+              <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="is493Slot(match, 'album1')" :tooltip-text="replaceTooltip(match)" />
+              <BracketEntry :album="match.album2" :is-winner="match.winner?.id === match.album2?.id" :is493="is493Slot(match, 'album2')" :tooltip-text="replaceTooltip(match)" />
+            </template>
           </div>
         </div>
       </div>
@@ -80,9 +106,14 @@ const finale = computed(() => {
           ]"
           @click="finale.winner && $emit('selectMatch', finale)"
         >
-          <BracketEntry :album="finale.album1" :is-winner="finale.winner?.id === finale.album1?.id" :is493="finale.replacement?.slot === 'album1'" />
-          <span class="text-doom-600 font-doom text-xl select-none">VS</span>
-          <BracketEntry :album="finale.album2" :is-winner="finale.winner?.id === finale.album2?.id" :is493="finale.replacement?.slot === 'album2'" />
+          <template v-if="isForceWin(finale)">
+            <BracketEntry :album="finale.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(finale)" />
+          </template>
+          <template v-else>
+            <BracketEntry :album="finale.album1" :is-winner="finale.winner?.id === finale.album1?.id" :is493="is493Slot(finale, 'album1')" :tooltip-text="replaceTooltip(finale)" />
+            <span class="text-doom-600 font-doom text-xl select-none">VS</span>
+            <BracketEntry :album="finale.album2" :is-winner="finale.winner?.id === finale.album2?.id" :is493="is493Slot(finale, 'album2')" :tooltip-text="replaceTooltip(finale)" />
+          </template>
         </div>
       </div>
     </div>
@@ -110,8 +141,13 @@ const finale = computed(() => {
             ]"
             @click="match.winner && $emit('selectMatch', match)"
           >
-            <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="match.replacement?.slot === 'album1'" />
-            <BracketEntry :album="match.album2" :is-winner="match.winner?.id === match.album2?.id" :is493="match.replacement?.slot === 'album2'" />
+            <template v-if="isForceWin(match)">
+              <BracketEntry :album="match.winner" :is-winner="true" :is493="true" :tooltip-text="forceWinTooltip(match)" />
+            </template>
+            <template v-else>
+              <BracketEntry :album="match.album1" :is-winner="match.winner?.id === match.album1?.id" :is493="is493Slot(match, 'album1')" :tooltip-text="replaceTooltip(match)" />
+              <BracketEntry :album="match.album2" :is-winner="match.winner?.id === match.album2?.id" :is493="is493Slot(match, 'album2')" :tooltip-text="replaceTooltip(match)" />
+            </template>
           </div>
         </div>
         <h3 class="text-lg font-doom text-ochre text-center mt-3 tracking-wide">
