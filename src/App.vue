@@ -10,7 +10,7 @@ import FortyNineThreeModal from './components/FortyNineThreeModal.vue'
 
 const { tournament, started, currentRound, currentMatch, champion, pickWinner, applyFortyNineThree, forceWinner, start, reset } = useTournament()
 
-const yearInput = ref(new Date().getFullYear())
+const yearInput = ref(2009)
 
 function startTournament(albums: Album[]) {
   start(yearInput.value, albums)
